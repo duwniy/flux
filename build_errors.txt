@@ -1,0 +1,156 @@
+> Task :clean
+
+> Task :compileJava FAILED
+/home/duwniy/IdeaProjects/flux/src/main/java/com/pipeline/modules/listing/domain/Listing.java:47: error: cannot find symbol
+    private SellerType sellerType;
+            ^
+  symbol:   class SellerType
+  location: class Listing
+/home/duwniy/IdeaProjects/flux/src/main/java/com/pipeline/modules/listing/domain/Listing.java:50: error: cannot find symbol
+    private ListingStatus status;
+            ^
+  symbol:   class ListingStatus
+  location: class Listing
+/home/duwniy/IdeaProjects/flux/src/main/java/com/pipeline/modules/listing/domain/Listing.java:128: error: cannot find symbol
+    public SellerType getSellerType() { return sellerType; }
+           ^
+  symbol:   class SellerType
+  location: class Listing
+/home/duwniy/IdeaProjects/flux/src/main/java/com/pipeline/modules/listing/domain/Listing.java:129: error: cannot find symbol
+    public void setSellerType(SellerType sellerType) { this.sellerType = sellerType; }
+                              ^
+  symbol:   class SellerType
+  location: class Listing
+/home/duwniy/IdeaProjects/flux/src/main/java/com/pipeline/modules/listing/domain/Listing.java:131: error: cannot find symbol
+    public ListingStatus getStatus() { return status; }
+           ^
+  symbol:   class ListingStatus
+  location: class Listing
+/home/duwniy/IdeaProjects/flux/src/main/java/com/pipeline/modules/listing/domain/Listing.java:132: error: cannot find symbol
+    public void setStatus(ListingStatus status) { this.status = status; }
+                          ^
+  symbol:   class ListingStatus
+  location: class Listing
+/home/duwniy/IdeaProjects/flux/src/main/java/com/pipeline/modules/listing/application/ListingEnrichmentService.java:24: error: cannot find symbol
+    private final ListingScoringEngine scoringEngine;
+                  ^
+  symbol:   class ListingScoringEngine
+  location: class ListingEnrichmentService
+/home/duwniy/IdeaProjects/flux/src/main/java/com/pipeline/modules/listing/application/ListingEnrichmentService.java:31: error: cannot find symbol
+                                     ListingScoringEngine scoringEngine,
+                                     ^
+  symbol:   class ListingScoringEngine
+  location: class ListingEnrichmentService
+/home/duwniy/IdeaProjects/flux/src/main/java/com/pipeline/modules/listing/domain/ListingScoringEngine.java:209: error: cannot find symbol
+    private ScoreFactor scoreSellerType(SellerType sellerType, int maxPoints) {
+                                        ^
+  symbol:   class SellerType
+  location: class ListingScoringEngine
+/home/duwniy/IdeaProjects/flux/src/main/java/com/pipeline/modules/ingestion/application/ListingIngestionService.java:22: error: cannot find symbol
+    private final ListingScoringEngine scoringEngine;
+                  ^
+  symbol:   class ListingScoringEngine
+  location: class ListingIngestionService
+/home/duwniy/IdeaProjects/flux/src/main/java/com/pipeline/modules/ingestion/application/ListingIngestionService.java:26: error: cannot find symbol
+    private final ListingVersioningService versioningService;
+                  ^
+  symbol:   class ListingVersioningService
+  location: class ListingIngestionService
+/home/duwniy/IdeaProjects/flux/src/main/java/com/pipeline/modules/ingestion/application/ListingIngestionService.java:29: error: cannot find symbol
+                                   ListingScoringEngine scoringEngine,
+                                   ^
+  symbol:   class ListingScoringEngine
+  location: class ListingIngestionService
+/home/duwniy/IdeaProjects/flux/src/main/java/com/pipeline/modules/ingestion/application/ListingIngestionService.java:33: error: cannot find symbol
+                                   ListingVersioningService versioningService) {
+                                   ^
+  symbol:   class ListingVersioningService
+  location: class ListingIngestionService
+13 errors
+
+[Incubating] Problems report is available at: file:///home/duwniy/IdeaProjects/flux/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':compileJava'.
+> Compilation failed; see the compiler output below.
+  /home/duwniy/IdeaProjects/flux/src/main/java/com/pipeline/modules/listing/domain/Listing.java:47: error: cannot find symbol
+      private SellerType sellerType;
+              ^
+    symbol:   class SellerType
+    location: class Listing
+  /home/duwniy/IdeaProjects/flux/src/main/java/com/pipeline/modules/listing/domain/Listing.java:50: error: cannot find symbol
+      private ListingStatus status;
+              ^
+    symbol:   class ListingStatus
+    location: class Listing
+  /home/duwniy/IdeaProjects/flux/src/main/java/com/pipeline/modules/listing/domain/Listing.java:128: error: cannot find symbol
+      public SellerType getSellerType() { return sellerType; }
+             ^
+    symbol:   class SellerType
+    location: class Listing
+  /home/duwniy/IdeaProjects/flux/src/main/java/com/pipeline/modules/listing/domain/Listing.java:129: error: cannot find symbol
+      public void setSellerType(SellerType sellerType) { this.sellerType = sellerType; }
+                                ^
+    symbol:   class SellerType
+    location: class Listing
+  /home/duwniy/IdeaProjects/flux/src/main/java/com/pipeline/modules/listing/domain/Listing.java:131: error: cannot find symbol
+      public ListingStatus getStatus() { return status; }
+             ^
+    symbol:   class ListingStatus
+    location: class Listing
+  /home/duwniy/IdeaProjects/flux/src/main/java/com/pipeline/modules/listing/domain/Listing.java:132: error: cannot find symbol
+      public void setStatus(ListingStatus status) { this.status = status; }
+                            ^
+    symbol:   class ListingStatus
+    location: class Listing
+  /home/duwniy/IdeaProjects/flux/src/main/java/com/pipeline/modules/listing/application/ListingEnrichmentService.java:24: error: cannot find symbol
+      private final ListingScoringEngine scoringEngine;
+                    ^
+    symbol:   class ListingScoringEngine
+    location: class ListingEnrichmentService
+  /home/duwniy/IdeaProjects/flux/src/main/java/com/pipeline/modules/listing/application/ListingEnrichmentService.java:31: error: cannot find symbol
+                                       ListingScoringEngine scoringEngine,
+                                       ^
+    symbol:   class ListingScoringEngine
+    location: class ListingEnrichmentService
+  /home/duwniy/IdeaProjects/flux/src/main/java/com/pipeline/modules/listing/domain/ListingScoringEngine.java:209: error: cannot find symbol
+      private ScoreFactor scoreSellerType(SellerType sellerType, int maxPoints) {
+                                          ^
+    symbol:   class SellerType
+    location: class ListingScoringEngine
+  /home/duwniy/IdeaProjects/flux/src/main/java/com/pipeline/modules/ingestion/application/ListingIngestionService.java:22: error: cannot find symbol
+      private final ListingScoringEngine scoringEngine;
+                    ^
+    symbol:   class ListingScoringEngine
+    location: class ListingIngestionService
+  /home/duwniy/IdeaProjects/flux/src/main/java/com/pipeline/modules/ingestion/application/ListingIngestionService.java:26: error: cannot find symbol
+      private final ListingVersioningService versioningService;
+                    ^
+    symbol:   class ListingVersioningService
+    location: class ListingIngestionService
+  /home/duwniy/IdeaProjects/flux/src/main/java/com/pipeline/modules/ingestion/application/ListingIngestionService.java:29: error: cannot find symbol
+                                     ListingScoringEngine scoringEngine,
+                                     ^
+    symbol:   class ListingScoringEngine
+    location: class ListingIngestionService
+  /home/duwniy/IdeaProjects/flux/src/main/java/com/pipeline/modules/ingestion/application/ListingIngestionService.java:33: error: cannot find symbol
+                                     ListingVersioningService versioningService) {
+                                     ^
+    symbol:   class ListingVersioningService
+    location: class ListingIngestionService
+  13 errors
+
+* Try:
+> Check your code and dependencies to fix the compilation error(s)
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 4s
+2 actionable tasks: 2 executed
