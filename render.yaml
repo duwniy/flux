@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: flux-backend
+    env: docker
+    plan: starter
+    region: frankfurt
+    rootDir: .
+    envVars:
+      - key: PORT
+        value: "8080"
+      - key: DB_URL
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: REDIS_HOST
+        sync: false
+      - key: REDIS_PORT
+        value: "6379"
+      - key: REDIS_PASSWORD
+        sync: false
+      - key: REDIS_SSL
+        value: "true"
+      - key: CH_URL
+        sync: false
+      - key: CH_USER
+        sync: false
+      - key: CH_PASSWORD
+        sync: false
