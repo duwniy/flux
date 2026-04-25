@@ -1,8 +1,7 @@
-package com.pipeline.modules.listing.domain;
+package com.pipeline.modules.enrichment.domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
@@ -12,17 +11,15 @@ import java.util.UUID;
 @Table(name = "enrichment_log")
 @Getter
 @Setter
-@NoArgsConstructor
 public class EnrichmentLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "listing_id", nullable = false)
+    @Column(name = "listing_id")
     private UUID listingId;
 
-    @Column(nullable = false)
     private String status;
 
     @Column(name = "error_msg")
@@ -31,11 +28,11 @@ public class EnrichmentLog {
     @Column(name = "duration_ms")
     private Integer durationMs;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", updatable = false)
     private Instant createdAt;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = Instant.now();
+        this.createdAt = Instant.now();
     }
 }

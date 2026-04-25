@@ -1,5 +1,6 @@
 package com.pipeline.modules.analytics.domain;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -7,7 +8,6 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
-import java.util.Map;
 import java.util.UUID;
 
 @Entity
@@ -17,6 +17,7 @@ import java.util.UUID;
 public class InteractionEvent {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(name = "listing_id", nullable = false)
@@ -34,13 +35,10 @@ public class InteractionEvent {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "payload", columnDefinition = "jsonb")
-    private Map<String, String> payload;
+    private JsonNode payload;
 
     @PrePersist
     public void prePersist() {
-        if (id == null) {
-            id = UUID.randomUUID();
-        }
         if (occurredAt == null) {
             occurredAt = Instant.now();
         }

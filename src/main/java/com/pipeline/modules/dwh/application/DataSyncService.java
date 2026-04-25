@@ -7,20 +7,25 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 @Service
 public class DataSyncService {
 
+    private static final String LISTING_SYNC = "listing_versions";
+    private static final String EVENTS_SYNC = "interaction_events";
+    private static final int CHUNK_SIZE = 1_000;
+
     private final JdbcTemplate postgresJdbc;
     private final JdbcTemplate clickHouseJdbc;
-
-    private Instant lastSyncVersions = Instant.EPOCH;
-    private Instant lastSyncEvents = Instant.EPOCH;
+    private final AtomicBoolean syncRunning = new AtomicBoolean(false);
 
     public DataSyncService(JdbcTemplate postgresJdbc,
                            @Qualifier("clickHouseJdbcTemplate") JdbcTemplate clickHouseJdbc) {
@@ -33,30 +38,43 @@ public class DataSyncService {
      */
     @Scheduled(cron = "0 0 * * * *")
     public void syncAll() {
-        syncListingPerformance();
-        syncInteractionEvents();
-        log.info("Data sync completed: versions since {}, events since {}",
-                lastSyncVersions, lastSyncEvents);
+        if (!syncRunning.compareAndSet(false, true)) {
+            log.warn("Sync already running, skipping trigger");
+            return;
+        }
+        try {
+            syncListingPerformance();
+            syncInteractionEvents();
+            log.info("Data sync completed");
+        } finally {
+            syncRunning.set(false);
+        }
     }
 
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void syncListingPerformance() {
+        Instant lastSyncVersions = getCheckpoint(LISTING_SYNC);
         List<ListingPerformanceFact> facts = postgresJdbc.query(
             """
-            SELECT lv.id, lv.listing_id, l.district_id, lv.price, 
-                   COALESCE(lv.score, 0), lv.scoring_model_id, lv.valid_from
+            SELECT lv.id, lv.listing_id, l.district_id, l.seller_type, lv.price,
+                   l.total_area_sqm, l.price_deviation_pct, COALESCE(lv.score, 0),
+                   lv.scoring_model_id, lv.valid_from
             FROM listing_versions lv
             JOIN listings l ON l.id = lv.listing_id
             WHERE lv.valid_from > ?
-            ORDER BY lv.valid_from
+            ORDER BY lv.valid_from, lv.id
             """,
             (rs, rowNum) -> new ListingPerformanceFact(
                 java.util.UUID.fromString(rs.getString(1)),
                 java.util.UUID.fromString(rs.getString(2)),
                 rs.getString(3),
-                rs.getBigDecimal(4),
-                rs.getInt(5),
-                rs.getString(6) != null ? java.util.UUID.fromString(rs.getString(6)) : null,
-                rs.getTimestamp(7).toInstant()
+                rs.getString(4),
+                rs.getBigDecimal(5),
+                rs.getBigDecimal(6),
+                rs.getBigDecimal(7),
+                rs.getInt(8),
+                rs.getString(9) != null ? java.util.UUID.fromString(rs.getString(9)) : null,
+                rs.getTimestamp(10).toInstant()
             ),
             Timestamp.from(lastSyncVersions)
         );
@@ -66,41 +84,30 @@ public class DataSyncService {
             return;
         }
 
-        clickHouseJdbc.batchUpdate(
-            """
-            INSERT INTO fact_listing_performance 
-            (version_id, listing_id, district_id, price, score, model_version, timestamp)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            """,
-            facts.stream().map(f -> new Object[]{
-                f.versionId().toString(),
-                f.listingId().toString(),
-                f.districtId(),
-                f.price(),
-                f.score(),
-                f.modelVersion() != null ? f.modelVersion().toString() : null,
-                Timestamp.from(f.timestamp())
-            }).toList()
-        );
-
-        lastSyncVersions = facts.get(facts.size() - 1).timestamp();
+        batchInsertPerformance(facts);
+        Instant latestTimestamp = facts.get(facts.size() - 1).timestamp();
+        updateCheckpoint(LISTING_SYNC, latestTimestamp);
         log.info("Synced {} listing performance facts", facts.size());
     }
 
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void syncInteractionEvents() {
+        Instant lastSyncEvents = getCheckpoint(EVENTS_SYNC);
         List<InteractionEventFact> facts = postgresJdbc.query(
             """
-            SELECT id, listing_id, listing_version_id, event_type, occurred_at
+            SELECT id, listing_id, listing_version_id, event_type,
+                   COALESCE(payload->>'sessionId', payload->>'session_id'), occurred_at
             FROM interaction_events
             WHERE occurred_at > ?
-            ORDER BY occurred_at
+            ORDER BY occurred_at, id
             """,
             (rs, rowNum) -> new InteractionEventFact(
                 java.util.UUID.fromString(rs.getString(1)),
                 java.util.UUID.fromString(rs.getString(2)),
                 rs.getString(3) != null ? java.util.UUID.fromString(rs.getString(3)) : null,
                 rs.getString(4),
-                rs.getTimestamp(5).toInstant()
+                rs.getString(5),
+                rs.getTimestamp(6).toInstant()
             ),
             Timestamp.from(lastSyncEvents)
         );
@@ -110,69 +117,84 @@ public class DataSyncService {
             return;
         }
 
-        clickHouseJdbc.batchUpdate(
-            """
-            INSERT INTO fact_interaction_events 
-            (event_id, listing_id, version_id, event_type, occurred_at)
-            VALUES (?, ?, ?, ?, ?)
-            """,
-            facts.stream().map(f -> new Object[]{
-                f.eventId().toString(),
-                f.listingId().toString(),
-                f.versionId() != null ? f.versionId().toString() : null,
-                f.eventType(),
-                Timestamp.from(f.occurredAt())
-            }).toList()
-        );
-
-        lastSyncEvents = facts.get(facts.size() - 1).occurredAt();
+        batchInsertInteractionEvents(facts);
+        Instant latestTimestamp = facts.get(facts.size() - 1).occurredAt();
+        updateCheckpoint(EVENTS_SYNC, latestTimestamp);
         log.info("Synced {} interaction event facts", facts.size());
     }
 
-    /**
-     * Конверсионная воронка: средний скоринг vs количество звонков по районам.
-     */
-    public List<ConversionFunnelRow> queryConversionFunnel() {
-        return clickHouseJdbc.query(
+    private void batchInsertPerformance(List<ListingPerformanceFact> facts) {
+        for (int i = 0; i < facts.size(); i += CHUNK_SIZE) {
+            List<ListingPerformanceFact> chunk = facts.subList(i, Math.min(i + CHUNK_SIZE, facts.size()));
+            clickHouseJdbc.batchUpdate(
+                """
+                INSERT INTO fact_listing_performance 
+                (version_id, listing_id, district_id, seller_type, price, total_area_sqm, price_deviation_pct,
+                 score, model_version, timestamp)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                chunk.stream().map(f -> new Object[]{
+                    f.versionId().toString(),
+                    f.listingId().toString(),
+                    f.districtId(),
+                    f.sellerType(),
+                    f.price(),
+                    f.totalAreaSqm(),
+                    f.priceDeviationPct(),
+                    f.score(),
+                    f.modelVersion() != null ? f.modelVersion().toString() : null,
+                    Timestamp.from(f.timestamp())
+                }).toList()
+            );
+            log.debug("Inserted listing chunk up to {}/{}", i + chunk.size(), facts.size());
+        }
+    }
+
+    private void batchInsertInteractionEvents(List<InteractionEventFact> facts) {
+        for (int i = 0; i < facts.size(); i += CHUNK_SIZE) {
+            List<InteractionEventFact> chunk = facts.subList(i, Math.min(i + CHUNK_SIZE, facts.size()));
+            clickHouseJdbc.batchUpdate(
+                """
+                INSERT INTO fact_interaction_events 
+                (event_id, listing_id, version_id, event_type, session_id, occurred_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                chunk.stream().map(f -> new Object[]{
+                    f.eventId().toString(),
+                    f.listingId().toString(),
+                    f.versionId() != null ? f.versionId().toString() : null,
+                    f.eventType(),
+                    f.sessionId(),
+                    Timestamp.from(f.occurredAt())
+                }).toList()
+            );
+            log.debug("Inserted interaction chunk up to {}/{}", i + chunk.size(), facts.size());
+        }
+    }
+
+    private Instant getCheckpoint(String syncName) {
+        postgresJdbc.update(
             """
-            SELECT 
-                p.district_id,
-                AVG(p.score) AS avg_score,
-                COUNT(e.event_id) AS total_calls
-            FROM fact_listing_performance p
-            LEFT JOIN fact_interaction_events e 
-                ON p.listing_id = e.listing_id AND e.event_type = 'PHONE_CLICK'
-            GROUP BY p.district_id
-            ORDER BY avg_score DESC
+            INSERT INTO sync_checkpoints(sync_name, last_synced)
+            VALUES (?, ?)
+            ON CONFLICT (sync_name) DO NOTHING
             """,
-            (rs, rowNum) -> new ConversionFunnelRow(
-                rs.getString("district_id"),
-                rs.getDouble("avg_score"),
-                rs.getLong("total_calls")
-            )
+            syncName,
+            Timestamp.from(Instant.EPOCH)
+        );
+
+        return postgresJdbc.queryForObject(
+            "SELECT last_synced FROM sync_checkpoints WHERE sync_name = ?",
+            (rs, rowNum) -> rs.getTimestamp(1).toInstant(),
+            syncName
         );
     }
 
-    /**
-     * Топ-5 районов по качеству объявлений.
-     */
-    public List<TopDistrictRow> queryTopDistricts() {
-        return clickHouseJdbc.query(
-            """
-            SELECT 
-                district_id,
-                AVG(score) AS avg_score,
-                COUNT(DISTINCT listing_id) AS listing_count
-            FROM fact_listing_performance
-            GROUP BY district_id
-            ORDER BY avg_score DESC
-            LIMIT 5
-            """,
-            (rs, rowNum) -> new TopDistrictRow(
-                rs.getString("district_id"),
-                rs.getDouble("avg_score"),
-                rs.getLong("listing_count")
-            )
+    private void updateCheckpoint(String syncName, Instant lastSynced) {
+        postgresJdbc.update(
+            "UPDATE sync_checkpoints SET last_synced = ? WHERE sync_name = ?",
+            Timestamp.from(lastSynced),
+            syncName
         );
     }
 }

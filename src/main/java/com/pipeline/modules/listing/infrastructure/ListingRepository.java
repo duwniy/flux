@@ -16,4 +16,7 @@ public interface ListingRepository extends JpaRepository<Listing, UUID> {
     Optional<Listing> findBySellerIdAndTitleAndDistrictId(
         String sellerId, String title, String districtId
     );
+    boolean existsBySellerIdAndTitleAndDistrictId(
+        String sellerId, String title, String districtId
+    );
 }

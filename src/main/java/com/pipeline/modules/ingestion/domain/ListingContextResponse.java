@@ -19,7 +19,7 @@ public record ListingContextResponse(
     @Schema(example = "-8.50", description = "Price deviation from district median in %")
     BigDecimal priceDeviationPct,
     @Schema(example = "1.40", description = "Demand index of the district")
-    BigDecimal demandIndex,
+    BigDecimal districtDemandIndex,
     @Schema(example = "156", description = "Number of active competitor listings in the district")
     Integer competitorCount,
     @Schema(description = "Timestamp when enrichment was completed")

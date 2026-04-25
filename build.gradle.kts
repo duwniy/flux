@@ -32,6 +32,7 @@ dependencies {
     implementation("org.springframework.modulith:spring-modulith-starter-core")
     implementation("org.flywaydb:flyway-core")
     implementation("org.flywaydb:flyway-database-postgresql")
+
     implementation("org.postgresql:postgresql")
 
     // Redis Streams

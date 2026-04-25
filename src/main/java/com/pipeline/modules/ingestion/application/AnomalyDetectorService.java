@@ -1,6 +1,7 @@
 package com.pipeline.modules.ingestion.application;
 
 import com.pipeline.modules.ingestion.domain.ListingIngestRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -8,45 +9,32 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class AnomalyDetectorService {
 
+    private final AnomalyDetectorConfig config;
+
     public List<String> detect(ListingIngestRequest request) {
+        return detect(request.price(), request.totalAreaSqm(), request.photosCount(), request.description());
+    }
+
+    public List<String> detect(BigDecimal price, BigDecimal totalAreaSqm, Integer photosCount, String description) {
         List<String> anomalies = new ArrayList<>();
 
-        checkPriceAnomaly(request, anomalies);
-        checkAreaAnomaly(request, anomalies);
-        checkPhotosAnomaly(request, anomalies);
-
-        return anomalies;
-    }
-
-    // Цена аномально низкая для жилья
-    // (не блокируем — вдруг это гараж или доля)
-    private void checkPriceAnomaly(ListingIngestRequest req,
-                                   List<String> anomalies) {
-        if (req.price() != null
-                && req.price().compareTo(new BigDecimal("500000")) < 0) {
+        if (price != null && price.compareTo(config.minPrice()) < 0) {
             anomalies.add("SUSPICIOUSLY_LOW_PRICE");
         }
-    }
 
-    // Площадь больше 500 м² — нечасто, но бывает
-    private void checkAreaAnomaly(ListingIngestRequest req,
-                                  List<String> anomalies) {
-        if (req.totalAreaSqm() != null
-                && req.totalAreaSqm().compareTo(new BigDecimal("500")) > 0) {
+        if (totalAreaSqm != null && totalAreaSqm.compareTo(config.maxAreaSqm()) > 0) {
             anomalies.add("UNUSUALLY_LARGE_AREA");
         }
-    }
 
-    // Много фото без описания — странная комбинация
-    private void checkPhotosAnomaly(ListingIngestRequest req,
-                                    List<String> anomalies) {
-        if (req.photosCount() != null
-                && req.photosCount() >= 10
-                && (req.description() == null
-                    || req.description().length() < 30)) {
+        if (photosCount != null 
+                && photosCount >= config.photosWithoutDescriptionThreshold()
+                && (description == null || description.length() < config.minDescriptionLength())) {
             anomalies.add("PHOTOS_WITHOUT_DESCRIPTION");
         }
+
+        return anomalies;
     }
 }

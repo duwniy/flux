@@ -30,7 +30,6 @@ public record ListingIngestRequest(
     String description,
 
     @NotNull
-    @DecimalMin(value = "0.0", inclusive = false, message = "price must be positive")
     @Schema(example = "15000000", description = "Price in local currency")
     BigDecimal price,
 
@@ -45,15 +44,15 @@ public record ListingIngestRequest(
     String districtId,
 
     @Min(1) @Max(100)
-    @Schema(example = "5", description = "Floor number (1-100)")
+    @Schema(example = "5", description = "Floor number (1-100). Optional.", nullable = true)
     Integer floor,
 
     @Min(1) @Max(100)
-    @Schema(example = "12", description = "Total floors in building (1-100)")
+    @Schema(example = "12", description = "Total floors in building (1-100). Optional.", nullable = true)
     Integer totalFloors,
 
     @Min(0) @Max(50)
-    @Schema(example = "5", description = "Number of photos provided")
+    @Schema(example = "5", description = "Number of photos provided. Defaults to 0.")
     Integer photosCount,
 
     @NotNull

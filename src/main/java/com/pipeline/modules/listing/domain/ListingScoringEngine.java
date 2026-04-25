@@ -50,7 +50,9 @@ public class ListingScoringEngine {
         return new ScoringResult(total, factors, Instant.now(), modelId);
     }
 
-    public ScoringResult scoreWithContext(Listing listing, DistrictContext context) {
+    public ScoringResult scoreWithContext(Listing listing, 
+                                          BigDecimal demandIndex, 
+                                          Integer competitorCount) {
         ScoringModel model = getActiveModel();
         Map<String, Integer> weights = model != null ? model.getFactorWeights() : DEFAULT_WEIGHTS;
         UUID modelId = model != null ? model.getId() : null;
@@ -66,8 +68,8 @@ public class ListingScoringEngine {
 
         // Market factors
         factors.add(scorePriceCompetitiveness(listing.getPriceDeviationPct(), weights.getOrDefault("price_competitiveness", 20)));
-        factors.add(scoreDemandContext(context.demandIndex(), weights.getOrDefault("demand_context", 10)));
-        factors.add(scoreCompetitorDensity(context.activeListingsCount(), weights.getOrDefault("competitor_density", 5)));
+        factors.add(scoreDemandContext(demandIndex, weights.getOrDefault("demand_context", 10)));
+        factors.add(scoreCompetitorDensity(competitorCount, weights.getOrDefault("competitor_density", 5)));
 
         // Anomaly penalty ( ثابت -10 points as per requirements, could also be dynamic if needed )
         if (Boolean.TRUE.equals(listing.getIsAnomaly())) {

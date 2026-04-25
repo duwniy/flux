@@ -1,48 +1,47 @@
 package com.pipeline.modules.ingestion.application;
 
+import com.pipeline.core.config.RedisStreamKeys;
 import com.pipeline.modules.listing.domain.Listing;
-import com.pipeline.core.shared.ListingCreatedEvent;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.data.redis.connection.stream.ObjectRecord;
+import com.pipeline.modules.listing.domain.ListingCreatedDomainEvent;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.stream.StreamRecords;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
+import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class ListingEventPublisherService {
 
-    private static final Logger log = LoggerFactory.getLogger(ListingEventPublisherService.class);
-
-    public static final String LISTING_CREATED_STREAM = "listing.created";
-
     private final StringRedisTemplate redisTemplate;
-    private final ObjectMapper objectMapper;
 
-    public ListingEventPublisherService(StringRedisTemplate redisTemplate,
-                                        ObjectMapper objectMapper) {
-        this.redisTemplate = redisTemplate;
-        this.objectMapper = objectMapper;
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void handleListingCreatedEvent(ListingCreatedDomainEvent event) {
+        publishCreated(event.listingId());
     }
 
-    public void publishCreated(Listing listing) {
-        ListingCreatedEvent event = ListingCreatedEvent.from(listing);
+    public void publishCreated(UUID listingId) {
         try {
-            @SuppressWarnings("unchecked")
-            Map<String, String> eventMap = objectMapper.convertValue(event, Map.class);
+            Map<String, String> eventMap = new LinkedHashMap<>();
+            eventMap.put("listingId", listingId.toString());
+            eventMap.put("occurredAt", Instant.now().toString());
 
-            ObjectRecord<String, Map<String, String>> record =
-                StreamRecords.<String, Map<String, String>>objectBacked(eventMap)
-                    .withStreamKey(LISTING_CREATED_STREAM);
-
-            redisTemplate.opsForStream().add(record);
-            log.info("Published ListingCreatedEvent for listing {}", listing.getId());
+            redisTemplate.opsForStream().add(
+                StreamRecords.mapBacked(eventMap).withStreamKey(RedisStreamKeys.LISTING_CREATED)
+            );
+            log.info("Published ListingCreatedEvent for listing {}", listingId);
         } catch (Exception e) {
-            log.warn("Failed to publish ListingCreatedEvent for listing {}: {}",
-                listing.getId(), e.getMessage());
+            log.error("CRITICAL: Failed to publish ListingCreatedEvent for listing {}. " +
+                "Listing stuck in PENDING status until manual retry. Error: {}",
+                listingId, e.getMessage());
         }
     }
 }

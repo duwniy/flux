@@ -15,12 +15,14 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableJpaRepositories(basePackages = {
     "com.pipeline.modules.listing.infrastructure", 
     "com.pipeline.modules.analytics.infrastructure",
-    "com.pipeline.modules.monitoring.infrastructure"
+    "com.pipeline.modules.monitoring.infrastructure",
+    "com.pipeline.modules.enrichment.infrastructure"
 })
 @EntityScan(basePackages = {
     "com.pipeline.modules.listing.domain",
     "com.pipeline.modules.analytics.domain",
-    "com.pipeline.modules.monitoring.domain"
+    "com.pipeline.modules.monitoring.domain",
+    "com.pipeline.modules.enrichment.domain"
 })
 public class AnalyticsConfig {
 }
