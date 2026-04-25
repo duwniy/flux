@@ -12,7 +12,7 @@ spring:
     show-sql: false
   flyway:
     enabled: true
-    locations: classpath:db/migration
+    locations: classpath:db/migration, classpath:db/seed
     baseline-on-migrate: true
     baseline-version: 0
     schemas: public
@@ -20,6 +20,7 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+      timeout: 5000ms
       password: ${REDIS_PASSWORD:}
       ssl:
         enabled: ${REDIS_SSL:false}

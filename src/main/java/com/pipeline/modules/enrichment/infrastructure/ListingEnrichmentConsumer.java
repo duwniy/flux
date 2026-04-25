@@ -2,6 +2,8 @@ package com.pipeline.modules.enrichment.infrastructure;
 
 import com.pipeline.modules.enrichment.application.ListingEnrichmentService;
 import com.pipeline.modules.monitoring.application.PipelineMonitorService;
+import com.pipeline.modules.monitoring.domain.PipelineName;
+import com.pipeline.modules.monitoring.domain.PipelineRun;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.stream.*;
@@ -55,38 +57,44 @@ public class ListingEnrichmentConsumer {
     }
 
     private void processMessage(MapRecord<String, Object, Object> message) {
-        Map<Object, Object> body = message.getValue();
-        UUID listingId = UUID.fromString((String) body.get("listingId"));
-        com.pipeline.modules.monitoring.domain.PipelineRun run = monitorService.startRun(com.pipeline.modules.monitoring.domain.PipelineName.ENRICHMENT_PIPELINE);
+        var body = message.getValue();
+        if (body == null || !body.containsKey("listingId")) {
+            log.debug("System message detected. ID: {}. Acking...", message.getId());
+            redisTemplate.opsForStream().acknowledge(STREAM_KEY, GROUP_NAME, message.getId());
+            return;
+        }
 
-        log.info("Processing enrichment for listing: {} (Message ID: {})", listingId, message.getId());
-
+        // Только если listingId есть, парсим его и запускаем пайплайн
+        UUID listingId = UUID.fromString(body.get("listingId").toString());
+        PipelineRun run = monitorService.startRun(PipelineName.ENRICHMENT_PIPELINE);
+        
         try {
+            log.info("Processing enrichment for listing: {}", listingId);
             enrichmentService.enrich(listingId);
             monitorService.completeRun(run.getId(), 1, 0);
         } catch (Exception e) {
             log.error("Enrichment error for listing {}: {}", listingId, e.getMessage());
             monitorService.failRun(run.getId(), e.getMessage());
-            // Мы подтверждаем (acknowledge) сообщение даже при ошибке, чтобы не блокировать стрим (poison pill).
-            // Ошибка зафиксирована в enrichment_log и мониторинге.
         } finally {
-            // Гарантированный ACK в блоке finally
             redisTemplate.opsForStream().acknowledge(STREAM_KEY, GROUP_NAME, message.getId());
         }
     }
 
     private void ensureConsumerGroup() {
         try {
-            redisTemplate.opsForStream().createGroup(STREAM_KEY, GROUP_NAME);
-            log.info("Consumer group created: {}", GROUP_NAME);
-        } catch (Exception e) {
-            if (e.getMessage().contains("BUSYGROUP")) {
-                log.debug("Consumer group already exists: {}", GROUP_NAME);
+            StreamInfo.XInfoGroups groupsInfo = redisTemplate.opsForStream().groups(STREAM_KEY);
+            boolean groupExists = groupsInfo.stream()
+                .anyMatch(group -> GROUP_NAME.equals(group.groupName()));
+
+            if (!groupExists) {
+                redisTemplate.opsForStream().createGroup(STREAM_KEY, GROUP_NAME);
+                log.info("Consumer group created: {}", GROUP_NAME);
             } else {
-                log.error("Failed to create consumer group: {}", e.getMessage());
-                return;
+                log.debug("Consumer group already exists: {}", GROUP_NAME);
             }
+            groupCreated = true;
+        } catch (Exception e) {
+            log.error("Detailed Redis Error: ", e);
         }
-        groupCreated = true;
     }
 }

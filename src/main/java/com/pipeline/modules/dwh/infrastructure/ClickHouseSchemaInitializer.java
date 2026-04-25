@@ -26,9 +26,15 @@ public class ClickHouseSchemaInitializer {
 
     @org.springframework.context.event.EventListener(org.springframework.boot.context.event.ApplicationReadyEvent.class)
     public void initializeSchema() {
+        executeScripts("classpath*:clickhouse-migrations/*.sql");
+        executeScripts("classpath*:clickhouse-seeds/*.sql");
+    }
+
+    private void executeScripts(String locationPattern) {
         try {
             PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-            Resource[] resources = resolver.getResources("classpath:clickhouse/schema/*.sql");
+            Resource[] resources = resolver.getResources(locationPattern);
+            if (resources == null || resources.length == 0) return;
             Arrays.sort(resources, (left, right) -> left.getFilename().compareTo(right.getFilename()));
 
             for (Resource resource : resources) {
@@ -42,14 +48,16 @@ public class ClickHouseSchemaInitializer {
                             clickHouseJdbcTemplate.execute(trimmed);
                         }
                     }
-                    log.info("ClickHouse Cloud: Table verified/created based on file {}", resource.getFilename());
+                    log.info("ClickHouse Cloud: Script executed based on file {}", resource.getFilename());
                 } catch (Exception e) {
-                    log.error("Failed to execute ClickHouse migration script: {}", resource.getFilename(), e);
+                    log.error("Failed to execute ClickHouse script: {}", resource.getFilename(), e);
                     throw new RuntimeException("ClickHouse migration failed for " + resource.getFilename(), e);
                 }
             }
+        } catch (java.io.FileNotFoundException e) {
+            log.info("No scripts found at location: {}", locationPattern);
         } catch (Exception e) {
-            log.error("Could not read ClickHouse migration resources", e);
+            log.error("Could not read ClickHouse resources from {}", locationPattern, e);
             throw new RuntimeException("ClickHouse migration initialization failed", e);
         }
     }
