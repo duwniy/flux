@@ -20,6 +20,7 @@ import type {
 export function Dashboard() {
   const { filters } = useFiltersStore()
   const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const [trend, setTrend] = useState<ScoreTrendPoint[]>([])
   const [districts, setDistricts] = useState<DistrictScore[]>([])
   const [scatter, setScatter] = useState<ScatterPoint[]>([])
@@ -41,8 +42,16 @@ export function Dashboard() {
       setTrend(t)
       setDistricts(d)
       setScatter(sc)
+      setError(null)
+    }).catch((e) => {
+      console.error('Dashboard loading failed', e)
+      setError('Не удалось загрузить данные дашборда')
     })
   }, [filters])
+
+  if (error) {
+    return <div style={{ padding: 32, color: '#A32D2D' }}>{error}</div>
+  }
 
   if (!stats) {
     return <div style={{ padding: 32, color: 'var(--color-text-secondary)' }}>Загрузка...</div>

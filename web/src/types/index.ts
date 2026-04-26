@@ -159,3 +159,18 @@ export interface QualityReport {
   successPercentage: number
   failedCheckDetails: DataQualityCheck[]
 }
+
+export interface EnrichmentStats {
+  totalRuns: number
+  successCount: number
+  failedCount: number
+}
+
+export interface EnrichmentLogEntry {
+  id: string
+  listingId: string
+  status: 'SUCCESS' | 'FAILED'
+  errorMsg: string | null
+  durationMs: number
+  createdAt: string
+}

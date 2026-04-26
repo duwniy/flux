@@ -179,10 +179,10 @@ export function ListingsTable({ listings }: Props) {
                       fontSize: 'inherit',
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.textDecoration = 'underline'
+                      e.currentTarget.style.textDecoration = 'underline'
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.textDecoration = 'none'
+                      e.currentTarget.style.textDecoration = 'none'
                     }}
                   >
                     {listing.title}

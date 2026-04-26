@@ -4,9 +4,44 @@ import { PipelineHealthCard } from '../components/monitoring/PipelineHealthCard'
 import { QualityReportTable } from '../components/monitoring/QualityReportTable'
 import type { HealthReport, QualityReport } from '../types'
 
+function normalizeHealth(input: unknown): HealthReport {
+  const raw = (input ?? {}) as Partial<HealthReport>
+  const pipelines = Array.isArray(raw.pipelines) ? raw.pipelines : []
+  return {
+    status: raw.status ?? 'DEGRADED',
+    pipelines: pipelines.map((p) => ({
+      name: p?.name ?? 'unknown',
+      status: p?.status ?? 'DEGRADED',
+      lastSuccessfulRun: p?.lastSuccessfulRun ?? '',
+      recordsProcessed: Number.isFinite(Number(p?.recordsProcessed)) ? Number(p?.recordsProcessed) : 0,
+      errorCount: Number.isFinite(Number(p?.errorCount)) ? Number(p?.errorCount) : 0,
+    })),
+  }
+}
+
+function normalizeQuality(input: unknown): QualityReport {
+  const raw = (input ?? {}) as Partial<QualityReport>
+  const failed = Array.isArray(raw.failedCheckDetails) ? raw.failedCheckDetails : []
+  return {
+    totalChecks: Number.isFinite(Number(raw.totalChecks)) ? Number(raw.totalChecks) : 0,
+    passedChecks: Number.isFinite(Number(raw.passedChecks)) ? Number(raw.passedChecks) : 0,
+    failedChecks: Number.isFinite(Number(raw.failedChecks)) ? Number(raw.failedChecks) : 0,
+    successPercentage: Number.isFinite(Number(raw.successPercentage)) ? Number(raw.successPercentage) : 0,
+    failedCheckDetails: failed.map((c) => ({
+      checkName: c?.checkName ?? 'Unknown check',
+      entityType: c?.entityType ?? 'UNKNOWN',
+      entityId: c?.entityId ?? '-',
+      passed: Boolean(c?.passed),
+      failureReason: c?.failureReason ?? 'No reason',
+      checkedAt: c?.checkedAt ?? '',
+    })),
+  }
+}
+
 export function Monitoring() {
   const [health, setHealth] = useState<HealthReport | null>(null)
   const [quality, setQuality] = useState<QualityReport | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const [isSyncing, setIsSyncing] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
 
@@ -19,10 +54,12 @@ export function Monitoring() {
   const loadData = async () => {
     try {
       const [h, q] = await Promise.all([monitoringApi.getHealth(), monitoringApi.getQualityReport()])
-      setHealth(h)
-      setQuality(q)
+      setHealth(normalizeHealth(h))
+      setQuality(normalizeQuality(q))
+      setError(null)
     } catch (error) {
       console.error('Error loading monitoring data:', error)
+      setError('Не удалось загрузить данные мониторинга')
     }
   }
 
@@ -40,9 +77,14 @@ export function Monitoring() {
     }
   }
 
+  const pipelines = Array.isArray(health?.pipelines) ? health.pipelines : []
   const isHealthy = health?.status === 'UP'
   const hasIssues = health && health.status !== 'UP'
-  const problemPipelines = health?.pipelines.filter((p) => p.status !== 'UP') || []
+  const problemPipelines = pipelines.filter((p) => p.status !== 'UP')
+
+  if (error && !health && !quality) {
+    return <div style={{ padding: 20, color: '#A32D2D' }}>{error}</div>
+  }
 
   return (
     <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -107,7 +149,7 @@ export function Monitoring() {
               gap: 16,
             }}
           >
-            {health.pipelines.map((pipeline) => (
+            {pipelines.map((pipeline) => (
               <PipelineHealthCard key={pipeline.name} pipeline={pipeline} />
             ))}
           </div>

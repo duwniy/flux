@@ -22,6 +22,8 @@ export function QualityReportTable({ checks }: Props) {
     return triggerReasonBadgeColor['OTHER']
   }
 
+  const safeChecks = Array.isArray(checks) ? checks : []
+
   return (
     <div
       style={{
@@ -87,9 +89,10 @@ export function QualityReportTable({ checks }: Props) {
           </tr>
         </thead>
         <tbody>
-          {checks.map((check, idx) => {
+          {safeChecks.map((check, idx) => {
             const colors = getCheckColor(check.checkName)
             const isClickable = check.entityType === 'LISTING'
+            const checkedAt = check.checkedAt ? new Date(check.checkedAt).toLocaleString('ru-RU') : '-'
 
             return (
               <tr
@@ -142,7 +145,7 @@ export function QualityReportTable({ checks }: Props) {
                   {check.failureReason}
                 </td>
                 <td style={{ padding: '12px 16px', fontSize: 12, whiteSpace: 'nowrap' }}>
-                  {new Date(check.checkedAt).toLocaleString('ru-RU')}
+                  {checkedAt}
                 </td>
               </tr>
             )

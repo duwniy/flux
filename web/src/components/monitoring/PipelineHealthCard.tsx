@@ -17,7 +17,16 @@ const statusTextColors: Record<string, string> = {
 }
 
 export function PipelineHealthCard({ pipeline }: Props) {
-  const colors = statusColors[pipeline.status]
+  const status = pipeline.status in statusColors ? pipeline.status : 'DEGRADED'
+  const colors = statusColors[status]
+  const statusTextColor = statusTextColors[status] ?? '#EF9F27'
+  const formattedRunTime = pipeline.lastSuccessfulRun
+    ? new Date(pipeline.lastSuccessfulRun).toLocaleString('ru-RU')
+    : '-'
+  const recordsProcessed = Number.isFinite(pipeline.recordsProcessed)
+    ? pipeline.recordsProcessed.toLocaleString('ru')
+    : '0'
+  const errorCount = Number.isFinite(pipeline.errorCount) ? pipeline.errorCount : 0
 
   return (
     <div
@@ -43,12 +52,12 @@ export function PipelineHealthCard({ pipeline }: Props) {
             fontSize: 24,
           }}
         >
-          <span style={{ color: statusTextColors[pipeline.status] }}>●</span>
+          <span style={{ color: statusTextColor }}>●</span>
           <span
             style={{
               fontSize: 14,
               fontWeight: 500,
-              color: statusTextColors[pipeline.status],
+              color: statusTextColor,
             }}
           >
             {colors.label}
@@ -59,23 +68,21 @@ export function PipelineHealthCard({ pipeline }: Props) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <span style={{ color: 'var(--color-text-secondary, #5f5a52)' }}>Последний успешный запуск:</span>
-          <span style={{ fontWeight: 500 }}>
-            {new Date(pipeline.lastSuccessfulRun).toLocaleString('ru-RU')}
-          </span>
+          <span style={{ fontWeight: 500 }}>{formattedRunTime}</span>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <span style={{ color: 'var(--color-text-secondary, #5f5a52)' }}>Обработано записей:</span>
-          <span style={{ fontWeight: 500 }}>{pipeline.recordsProcessed.toLocaleString('ru')}</span>
+          <span style={{ fontWeight: 500 }}>{recordsProcessed}</span>
         </div>
         <div
           style={{
             display: 'flex',
             justifyContent: 'space-between',
-            color: pipeline.errorCount > 0 ? '#E24B4A' : undefined,
+            color: errorCount > 0 ? '#E24B4A' : undefined,
           }}
         >
           <span style={{ color: 'var(--color-text-secondary, #5f5a52)' }}>Ошибки:</span>
-          <span style={{ fontWeight: 500 }}>{pipeline.errorCount}</span>
+          <span style={{ fontWeight: 500 }}>{errorCount}</span>
         </div>
       </div>
     </div>

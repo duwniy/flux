@@ -8,6 +8,7 @@ import { ListingScoreCard } from '../components/listing/ListingScoreCard'
 import { MarketContextBlock } from '../components/listing/MarketContextBlock'
 import { RecommendationsBlock } from '../components/listing/RecommendationsBlock'
 import { EnrichmentActionBlock } from '../components/listing/EnrichmentActionBlock'
+import { EnrichmentHistoryPanel } from '../components/listing/EnrichmentHistoryPanel'
 import { ListingVersionHistory } from '../components/listing/ListingVersionHistory'
 import { AnalyticsMetricsBlock } from '../components/listing/AnalyticsMetricsBlock'
 import type { AnalyticsSummary, Listing, VersionAnalytics, MarketContext, ListingRecommendation, ConversionAnalytics } from '../types'
@@ -15,12 +16,14 @@ import type { AnalyticsSummary, Listing, VersionAnalytics, MarketContext, Listin
 export function ListingDetail() {
   const { id } = useParams<{ id: string }>()
   const [listing, setListing] = useState<Listing | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null)
   const [versions, setVersions] = useState<VersionAnalytics[]>([])
   const [marketContext, setMarketContext] = useState<MarketContext | null>(null)
   const [recommendations, setRecommendations] = useState<ListingRecommendation[]>([])
   const [conversionAnalytics, setConversionAnalytics] = useState<ConversionAnalytics[]>([])
   const [listingVersions, setListingVersions] = useState<any[]>([])
+  const [historyOpen, setHistoryOpen] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -40,6 +43,10 @@ export function ListingDetail() {
       setRecommendations(recs)
       setConversionAnalytics(convAn)
       setListingVersions(vers)
+      setError(null)
+    }).catch((e) => {
+      console.error('Listing details loading failed', e)
+      setError('Не удалось загрузить данные объявления')
     })
   }, [id])
 
@@ -50,11 +57,36 @@ export function ListingDetail() {
     }
   }
 
+  if (error) return <div style={{ padding: 32, color: '#A32D2D' }}>{error}</div>
   if (!listing) return <div style={{ padding: 32 }}>Загрузка...</div>
 
   return (
     <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <h2 style={{ fontSize: 18, fontWeight: 500 }}>{listing.title}</h2>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <h2 style={{ fontSize: 18, fontWeight: 500 }}>{listing.title}</h2>
+        <button
+          onClick={() => setHistoryOpen(true)}
+          style={{
+            padding: '8px 14px',
+            background: 'var(--color-background-primary, #ffffff)',
+            border: '0.5px solid var(--color-border-tertiary, #dad7cf)',
+            borderRadius: 6,
+            fontSize: 12,
+            fontWeight: 500,
+            cursor: 'pointer',
+            color: 'var(--color-text-primary, #1d1d1b)',
+            transition: 'background 150ms',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'var(--color-background-secondary, #ece9e2)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'var(--color-background-primary, #ffffff)'
+          }}
+        >
+          История обогащения
+        </button>
+      </div>
 
       {/* Block 1: Score Card */}
       <ListingScoreCard listing={listing} />
@@ -100,6 +132,16 @@ export function ListingDetail() {
 
       {/* Block 8: Version History */}
       {listingVersions.length > 0 && <ListingVersionHistory versions={listingVersions} />}
+
+      {/* Enrichment History Side Panel */}
+      {id && (
+        <EnrichmentHistoryPanel
+          listingId={id}
+          open={historyOpen}
+          onClose={() => setHistoryOpen(false)}
+        />
+      )}
     </div>
   )
 }
+
