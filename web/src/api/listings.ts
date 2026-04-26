@@ -1,5 +1,5 @@
 import { get } from './client'
-import type { Listing, ListingVersion } from '../types'
+import type { Listing, ListingVersion, MarketContext, ListingRecommendation, ConversionAnalytics } from '../types'
 
 // TODO: Replace with GET /api/v1/listings when endpoint is available
 const listingsMock: Listing[] = [
@@ -100,8 +100,9 @@ const listingsMock: Listing[] = [
 export const listingsApi = {
   getById: (id: string) => get<Listing>(`/listings/${id}`),
   getVersions: (id: string) => get<ListingVersion[]>(`/listings/${id}/versions`),
-  getContext: (id: string) => get(`/listings/${id}/context`),
-  getRecommendations: (id: string) => get(`/listings/${id}/recommendations`),
+  getContext: (id: string) => getMarketContext(id),
+  getRecommendations: (id: string) => getRecommendations(id),
+  getConversionAnalytics: (id: string) => getConversionAnalytics(id),
 
   getAll: async () => {
     try {
@@ -110,4 +111,56 @@ export const listingsApi = {
       return listingsMock
     }
   },
+}
+
+// Mock data functions for the 6 blocks
+async function getMarketContext(id: string): Promise<MarketContext> {
+  return {
+    districtName: 'Хамовники',
+    avgPrice: 45000000,
+    avgPriceSqm: 375000,
+    avgScore: 75,
+    demandIndex: 8.5,
+    competitorCount: 42,
+    avgDaysOnMarket: 45,
+  }
+}
+
+async function getRecommendations(id: string): Promise<ListingRecommendation[]> {
+  return [
+    {
+      id: 'rec-1',
+      priority: 'HIGH',
+      title: 'Добавьте больше фотографий',
+      description: 'Объявления с 15+ фотографиями получают на 35% больше просмотров',
+      potentialImpact: 35,
+    },
+    {
+      id: 'rec-2',
+      priority: 'HIGH',
+      title: 'Улучшите заголовок',
+      description: 'Используйте более привлекательные ключевые слова в заголовке',
+      potentialImpact: 28,
+    },
+    {
+      id: 'rec-3',
+      priority: 'MEDIUM',
+      title: 'Добавьте описание преимуществ',
+      description: 'Объявления с подробным описанием имеют выше rate конверсии',
+      potentialImpact: 18,
+    },
+  ]
+}
+
+async function getConversionAnalytics(id: string): Promise<ConversionAnalytics[]> {
+  return [
+    { date: '2026-04-15', version: 1, views: 120, clicks: 8, conversionRate: 6.7 },
+    { date: '2026-04-16', version: 1, views: 145, clicks: 10, conversionRate: 6.9 },
+    { date: '2026-04-17', version: 1, views: 132, clicks: 9, conversionRate: 6.8 },
+    { date: '2026-04-18', version: 2, views: 165, clicks: 14, conversionRate: 8.5 },
+    { date: '2026-04-19', version: 2, views: 178, clicks: 16, conversionRate: 9.0 },
+    { date: '2026-04-20', version: 2, views: 192, clicks: 18, conversionRate: 9.4 },
+    { date: '2026-04-21', version: 2, views: 210, clicks: 20, conversionRate: 9.5 },
+    { date: '2026-04-22', version: 3, views: 235, clicks: 24, conversionRate: 10.2 },
+  ]
 }

@@ -93,3 +93,29 @@ export interface Filters {
   priceSegment: string
   period: string
 }
+
+export interface MarketContext {
+  districtName: string
+  avgPrice: number
+  avgPriceSqm: number
+  avgScore: number
+  demandIndex: number
+  competitorCount: number
+  avgDaysOnMarket: number
+}
+
+export interface ListingRecommendation {
+  id: string
+  priority: 'HIGH' | 'MEDIUM' | 'LOW'
+  title: string
+  description: string
+  potentialImpact: number
+}
+
+export interface ConversionAnalytics {
+  date: string
+  version: number
+  views: number
+  clicks: number
+  conversionRate: number
+}

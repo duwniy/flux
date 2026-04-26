@@ -3,8 +3,14 @@ import { useParams } from 'react-router-dom'
 import { analyticsApi } from '../api/analytics'
 import { listingsApi } from '../api/listings'
 import { FunnelChart } from '../components/charts/FunnelChart'
+import { ConversionTrendChart } from '../components/charts/ConversionTrendChart'
 import { ListingScoreCard } from '../components/listing/ListingScoreCard'
-import type { AnalyticsSummary, Listing, VersionAnalytics } from '../types'
+import { MarketContextBlock } from '../components/listing/MarketContextBlock'
+import { RecommendationsBlock } from '../components/listing/RecommendationsBlock'
+import { EnrichmentActionBlock } from '../components/listing/EnrichmentActionBlock'
+import { ListingVersionHistory } from '../components/listing/ListingVersionHistory'
+import { AnalyticsMetricsBlock } from '../components/listing/AnalyticsMetricsBlock'
+import type { AnalyticsSummary, Listing, VersionAnalytics, MarketContext, ListingRecommendation, ConversionAnalytics } from '../types'
 
 export function ListingDetail() {
   const { id } = useParams<{ id: string }>()
