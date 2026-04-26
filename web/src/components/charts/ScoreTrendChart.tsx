@@ -15,6 +15,15 @@ interface Props {
   data: ScoreTrendPoint[]
 }
 
+const safeFormatDate = (value: string, pattern: string) => {
+  try {
+    if (!value) return '-'
+    return format(parseISO(value), pattern, { locale: ru })
+  } catch {
+    return value || '-'
+  }
+}
+
 export function ScoreTrendChart({ data }: Props) {
   return (
     <ResponsiveContainer width="100%" height={120}>
@@ -26,7 +35,7 @@ export function ScoreTrendChart({ data }: Props) {
         />
         <XAxis
           dataKey="date"
-          tickFormatter={(v) => format(parseISO(v), 'd MMM', { locale: ru })}
+          tickFormatter={(v) => safeFormatDate(String(v), 'd MMM')}
           tick={{ fontSize: 11, fill: 'var(--color-text-tertiary, #8f877d)' }}
           axisLine={false}
           tickLine={false}
@@ -45,7 +54,7 @@ export function ScoreTrendChart({ data }: Props) {
             fontSize: 13,
           }}
           formatter={(v: number) => [v.toFixed(1), 'Средний скоринг']}
-          labelFormatter={(l) => format(parseISO(l), 'd MMMM', { locale: ru })}
+          labelFormatter={(l) => safeFormatDate(String(l), 'd MMMM')}
         />
         <Line
           type="monotone"

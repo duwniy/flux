@@ -60,7 +60,13 @@ export function ScatterPlot({ data }: Props) {
         <Scatter
           data={data}
           shape={(props: any) => (
-            <circle cx={props.cx} cy={props.cy} r={5} fill={dotColor(props.payload.score)} opacity={0.75} />
+            <circle
+              cx={props?.cx ?? 0}
+              cy={props?.cy ?? 0}
+              r={5}
+              fill={dotColor(Number(props?.payload?.score ?? 0))}
+              opacity={0.75}
+            />
           )}
         />
       </ScatterChart>

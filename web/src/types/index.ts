@@ -60,7 +60,7 @@ export interface VersionAnalytics {
 
 export interface DistrictScore {
   districtId: string
-  name: string
+  districtName: string
   avgScore: number
   listingCount: number
 }
@@ -92,4 +92,85 @@ export interface Filters {
   sellerType: string
   priceSegment: string
   period: string
+}
+
+export interface MarketContext {
+  districtName: string
+  avgPrice: number
+  avgPriceSqm: number
+  avgScore: number
+  demandIndex: number
+  competitorCount: number
+  avgDaysOnMarket: number
+}
+
+export interface ListingRecommendation {
+  id: string
+  priority: 'HIGH' | 'MEDIUM' | 'LOW'
+  title: string
+  description: string
+  potentialImpact: number
+}
+
+export interface ConversionAnalytics {
+  date: string
+  version: number
+  views: number
+  clicks: number
+  conversionRate: number
+}
+
+export interface ScoringModel {
+  id: string
+  versionNumber: number
+  name: string
+  factorWeights: Record<string, number>
+  isActive: boolean
+  activatedAt: string | null
+  createdAt: string
+}
+
+export interface PipelineHealth {
+  name: string
+  status: 'UP' | 'DOWN' | 'DEGRADED'
+  lastSuccessfulRun: string
+  recordsProcessed: number
+  errorCount: number
+}
+
+export interface HealthReport {
+  status: 'UP' | 'DOWN' | 'DEGRADED'
+  pipelines: PipelineHealth[]
+}
+
+export interface DataQualityCheck {
+  checkName: string
+  entityType: string
+  entityId: string
+  passed: boolean
+  failureReason: string | null
+  checkedAt: string
+}
+
+export interface QualityReport {
+  totalChecks: number
+  passedChecks: number
+  failedChecks: number
+  successPercentage: number
+  failedCheckDetails: DataQualityCheck[]
+}
+
+export interface EnrichmentStats {
+  totalRuns: number
+  successCount: number
+  failedCount: number
+}
+
+export interface EnrichmentLogEntry {
+  id: string
+  listingId: string
+  status: 'SUCCESS' | 'FAILED'
+  errorMsg: string | null
+  durationMs: number
+  createdAt: string
 }
