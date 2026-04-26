@@ -60,7 +60,7 @@ export interface VersionAnalytics {
 
 export interface DistrictScore {
   districtId: string
-  name: string
+  districtName: string
   avgScore: number
   listingCount: number
 }

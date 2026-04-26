@@ -1,5 +1,6 @@
 import { BrowserRouter, NavLink, Route, Routes } from 'react-router-dom'
 import { Dashboard } from './pages/Dashboard'
+import { Listings } from './pages/Listings'
 import { ListingDetail } from './pages/ListingDetail'
 
 export function App() {
@@ -33,9 +34,23 @@ export function App() {
           >
             Дашборд
           </NavLink>
+          <NavLink
+            to="/listings"
+            style={({ isActive }) => ({
+              fontSize: 14,
+              fontWeight: isActive ? 500 : 400,
+              color: isActive
+                ? 'var(--color-text-primary, #1d1d1b)'
+                : 'var(--color-text-secondary, #5f5a52)',
+              textDecoration: 'none',
+            })}
+          >
+            Объявления
+          </NavLink>
         </nav>
         <Routes>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/listings" element={<Listings />} />
           <Route path="/listings/:id" element={<ListingDetail />} />
         </Routes>
       </div>

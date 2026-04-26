@@ -27,10 +27,10 @@ const trendMock: ScoreTrendPoint[] = [
 ]
 
 const districtMock: DistrictScore[] = [
-  { districtId: 'hamovniki', name: 'Хамовники', avgScore: 82, listingCount: 124 },
-  { districtId: 'arbat', name: 'Арбат', avgScore: 78, listingCount: 102 },
-  { districtId: 'presnya', name: 'Пресненский', avgScore: 71, listingCount: 146 },
-  { districtId: 'biryulyovo', name: 'Бирюлево', avgScore: 54, listingCount: 88 },
+  { districtId: 'hamovniki', districtName: 'Хамовники', avgScore: 82, listingCount: 124 },
+  { districtId: 'arbat', districtName: 'Арбат', avgScore: 78, listingCount: 102 },
+  { districtId: 'presnya', districtName: 'Пресненский', avgScore: 71, listingCount: 146 },
+  { districtId: 'biryulyovo', districtName: 'Бирюлево', avgScore: 54, listingCount: 88 },
 ]
 
 const scatterMock: ScatterPoint[] = [
@@ -80,6 +80,21 @@ export const analyticsApi = {
       return await get<ScatterPoint[]>(`/analytics/dashboard/scatter?${params}`)
     } catch {
       return scatterMock
+    }
+  },
+
+  getHealth: async () => {
+    try {
+      return await get(`/monitoring/health`)
+    } catch {
+      return {
+        status: 'UP',
+        pipelines: [
+          { name: 'enrichment', status: 'UP' },
+          { name: 'analytics', status: 'UP' },
+          { name: 'notification', status: 'UP' },
+        ],
+      }
     }
   },
 }

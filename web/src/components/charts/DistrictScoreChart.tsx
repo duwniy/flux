@@ -25,7 +25,7 @@ export function DistrictScoreChart({ data }: Props) {
         />
         <YAxis
           type="category"
-          dataKey="name"
+          dataKey="districtName"
           tick={{ fontSize: 12, fill: 'var(--color-text-secondary, #5f5a52)' }}
           axisLine={false}
           tickLine={false}

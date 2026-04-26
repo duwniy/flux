@@ -4,8 +4,10 @@ import { ScatterPlot } from '../components/charts/ScatterPlot'
 import { DistrictScoreChart } from '../components/charts/DistrictScoreChart'
 import { FunnelChart } from '../components/charts/FunnelChart'
 import { ScoreTrendChart } from '../components/charts/ScoreTrendChart'
+import { ConversionFunnelTable } from '../components/charts/ConversionFunnelTable'
 import { KpiCard } from '../components/kpi/KpiCard'
 import { FilterBar } from '../components/layout/FilterBar'
+import { HealthStatus } from '../components/layout/HealthStatus'
 import { useFiltersStore } from '../store/filters'
 import type {
   AnalyticsSummary,
@@ -58,7 +60,10 @@ export function Dashboard() {
         }}
       >
         <h2 style={{ fontSize: 18, fontWeight: 500 }}>Аналитика платформы</h2>
-        <FilterBar />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <HealthStatus />
+          <FilterBar />
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
@@ -151,6 +156,19 @@ export function Dashboard() {
             Воронка конверсии
           </div>
           {funnel && <FunnelChart totalListings={stats.activeListings} summary={funnel} />}
+          <div style={{ marginTop: 16, borderTop: '0.5px solid var(--color-border-tertiary, #dad7cf)', paddingTop: 16 }}>
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 500,
+                color: 'var(--color-text-secondary, #5f5a52)',
+                marginBottom: 10,
+              }}
+            >
+              По районам
+            </div>
+            <ConversionFunnelTable data={districts} />
+          </div>
         </div>
         <div
           style={{
