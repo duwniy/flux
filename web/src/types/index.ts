@@ -119,3 +119,43 @@ export interface ConversionAnalytics {
   clicks: number
   conversionRate: number
 }
+
+export interface ScoringModel {
+  id: string
+  versionNumber: number
+  name: string
+  factorWeights: Record<string, number>
+  isActive: boolean
+  activatedAt: string | null
+  createdAt: string
+}
+
+export interface PipelineHealth {
+  name: string
+  status: 'UP' | 'DOWN' | 'DEGRADED'
+  lastSuccessfulRun: string
+  recordsProcessed: number
+  errorCount: number
+}
+
+export interface HealthReport {
+  status: 'UP' | 'DOWN' | 'DEGRADED'
+  pipelines: PipelineHealth[]
+}
+
+export interface DataQualityCheck {
+  checkName: string
+  entityType: string
+  entityId: string
+  passed: boolean
+  failureReason: string | null
+  checkedAt: string
+}
+
+export interface QualityReport {
+  totalChecks: number
+  passedChecks: number
+  failedChecks: number
+  successPercentage: number
+  failedCheckDetails: DataQualityCheck[]
+}

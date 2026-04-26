@@ -2,6 +2,8 @@ import { BrowserRouter, NavLink, Route, Routes } from 'react-router-dom'
 import { Dashboard } from './pages/Dashboard'
 import { Listings } from './pages/Listings'
 import { ListingDetail } from './pages/ListingDetail'
+import { ScoringModels } from './pages/ScoringModels'
+import { Monitoring } from './pages/Monitoring'
 
 export function App() {
   return (
@@ -47,11 +49,39 @@ export function App() {
           >
             Объявления
           </NavLink>
+          <NavLink
+            to="/scoring-models"
+            style={({ isActive }) => ({
+              fontSize: 14,
+              fontWeight: isActive ? 500 : 400,
+              color: isActive
+                ? 'var(--color-text-primary, #1d1d1b)'
+                : 'var(--color-text-secondary, #5f5a52)',
+              textDecoration: 'none',
+            })}
+          >
+            Скоринговые модели
+          </NavLink>
+          <NavLink
+            to="/monitoring"
+            style={({ isActive }) => ({
+              fontSize: 14,
+              fontWeight: isActive ? 500 : 400,
+              color: isActive
+                ? 'var(--color-text-primary, #1d1d1b)'
+                : 'var(--color-text-secondary, #5f5a52)',
+              textDecoration: 'none',
+            })}
+          >
+            Мониторинг
+          </NavLink>
         </nav>
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/listings" element={<Listings />} />
           <Route path="/listings/:id" element={<ListingDetail />} />
+          <Route path="/scoring-models" element={<ScoringModels />} />
+          <Route path="/monitoring" element={<Monitoring />} />
         </Routes>
       </div>
     </BrowserRouter>
